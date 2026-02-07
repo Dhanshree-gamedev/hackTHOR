@@ -35,6 +35,7 @@ async function startServer() {
         const purchaseRoutes = require('./routes/purchases');
         const ledgerRoutes = require('./routes/ledger');
         const projectRoutes = require('./routes/projects');
+        const chatRoutes = require('./routes/chat');
 
         // API Routes
         app.use('/api/auth', authRoutes);
@@ -49,6 +50,7 @@ async function startServer() {
         app.use('/api/purchases', purchaseRoutes);
         app.use('/api/ledger', ledgerRoutes);
         app.use('/api/projects', projectRoutes);
+        app.use('/api/chat', chatRoutes);
 
         // Health check endpoint
         app.get('/api/health', (req, res) => {
