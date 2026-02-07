@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleERP - Login</title>
+    <meta name="description" content="SimpleERP - Enterprise Resource Planning System Login">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="bi bi-building"></i>
+                </div>
+                <h1>SimpleERP</h1>
+                <p class="text-muted">Enterprise Resource Planning</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" placeholder="admin@erp.local" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input type="password" class="form-control" id="password" placeholder="Enter password" required>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="loginError" class="alert alert-danger d-none" role="alert"></div>
+                
+                <button type="submit" class="btn btn-primary w-100 btn-login">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loader d-none">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        Signing in...
+                    </span>
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p class="text-muted small">Default: admin@erp.local / admin123</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // Check if already logged in
+        if (localStorage.getItem('erp_token')) {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const password = document.getElementById('password');
+            const icon = this.querySelector('i');
+            if (password.type === 'password') {
+                password.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                password.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        });
+
+        // Handle login form
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            const btn = document.querySelector('.btn-login');
+            
+            // Show loading state
+            btn.querySelector('.btn-text').classList.add('d-none');
+            btn.querySelector('.btn-loader').classList.remove('d-none');
+            btn.disabled = true;
+            errorDiv.classList.add('d-none');
+            
+            try {
+                const result = await login(email, password);
+                if (result.success) {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    errorDiv.textContent = result.error;
+                    errorDiv.classList.remove('d-none');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.classList.remove('d-none');
+            } finally {
+                btn.querySelector('.btn-text').classList.remove('d-none');
+                btn.querySelector('.btn-loader').classList.add('d-none');
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

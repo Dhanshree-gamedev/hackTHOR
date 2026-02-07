@@ -1,0 +1,25 @@
+{
+  "name": "simple-erp",
+  "version": "1.0.0",
+  "description": "Web-Based Enterprise Resource Planning System",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "keywords": [
+    "erp",
+    "enterprise",
+    "nodejs",
+    "sqlite"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sql.js": "^1.9.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5"
+  }
+}
