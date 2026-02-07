@@ -2,14 +2,15 @@ const express = require('express');
 const router = express.Router();
 const https = require('https');
 const { authenticate } = require('../middleware/auth');
+const { getContextString } = require('../services/crawler');
 
-// OpenRouter configuration - API key from environment variable
+// OpenRouter configuration
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const MODEL = 'stepfun/step-3.5-flash:free';
 
 router.use(authenticate);
 
-// POST /api/chat - Send message to AI
+// POST /api/chat - Send message to AI with website context
 router.post('/', async (req, res) => {
     try {
         const { message, history = [] } = req.body;
@@ -18,7 +19,6 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'Message is required' });
         }
 
-        // Check if API key is configured
         if (!OPENROUTER_API_KEY) {
             return res.json({
                 reply: "The AI assistant is not configured. Please set the OPENROUTER_API_KEY environment variable.",
@@ -26,20 +26,25 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Build messages array with system prompt
-        const messages = [
-            {
-                role: 'system',
-                content: `You are an intelligent ERP assistant for SimpleERP. You help users with:
-- HR management (employees, attendance, payroll)
-- Inventory management (products, stock)
-- Sales and customer management
-- Purchasing and supplier management
-- Financial ledger and reports
-- Project and task management
+        // Fetch website context dynamically
+        const websiteContext = getContextString();
 
-Be helpful, concise, and professional. Provide actionable advice for business operations.`
-            },
+        // Build system prompt with website content
+        const systemPrompt = `You are SimpleERP Assistant, an AI helper for the SimpleERP system.
+
+IMPORTANT RULES:
+1. You MUST answer questions ONLY using the website knowledge base provided below.
+2. NEVER say "I don't have access to your website" or similar phrases.
+3. If the information is not in the knowledge base, say: "Please contact support for this information."
+4. Be helpful, concise, and professional.
+5. Guide users on how to use specific ERP features.
+
+${websiteContext}
+
+Remember: Only use the information above to answer questions. Do not make up features or capabilities not listed.`;
+
+        const messages = [
+            { role: 'system', content: systemPrompt },
             ...history.slice(-10),
             { role: 'user', content: message }
         ];
@@ -47,8 +52,8 @@ Be helpful, concise, and professional. Provide actionable advice for business op
         const requestData = JSON.stringify({
             model: MODEL,
             messages: messages,
-            max_tokens: 500,
-            temperature: 0.7
+            max_tokens: 600,
+            temperature: 0.5
         });
 
         const options = {
@@ -79,18 +84,19 @@ Be helpful, concise, and professional. Provide actionable advice for business op
                         });
                     }
 
-                    const reply = parsed.choices?.[0]?.message?.content || "I couldn't generate a response.";
+                    const reply = parsed.choices?.[0]?.message?.content ||
+                        "Please contact support for this information.";
                     res.json({ reply });
                 } catch (parseError) {
                     console.error('Parse error:', parseError);
-                    res.json({ reply: "I encountered an error processing the response.", error: true });
+                    res.json({ reply: "Please contact support for this information.", error: true });
                 }
             });
         });
 
         apiRequest.on('error', (error) => {
             console.error('API request error:', error);
-            res.json({ reply: "Connection error. Please check your internet and try again.", error: true });
+            res.json({ reply: "Connection error. Please contact support for assistance.", error: true });
         });
 
         apiRequest.write(requestData);

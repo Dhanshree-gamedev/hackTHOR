@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -36,6 +37,12 @@ async function startServer() {
         const ledgerRoutes = require('./routes/ledger');
         const projectRoutes = require('./routes/projects');
         const chatRoutes = require('./routes/chat');
+        const contextRoutes = require('./routes/context');
+
+        // Initialize website crawler
+        const { initializeContent, scheduleRefresh } = require('./services/crawler');
+        initializeContent();
+        scheduleRefresh();
 
         // API Routes
         app.use('/api/auth', authRoutes);
@@ -51,6 +58,7 @@ async function startServer() {
         app.use('/api/ledger', ledgerRoutes);
         app.use('/api/projects', projectRoutes);
         app.use('/api/chat', chatRoutes);
+        app.use('/api/chatbot', contextRoutes);
 
         // Health check endpoint
         app.get('/api/health', (req, res) => {
