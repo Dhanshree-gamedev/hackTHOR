@@ -3,8 +3,8 @@ const router = express.Router();
 const https = require('https');
 const { authenticate } = require('../middleware/auth');
 
-// OpenRouter configuration
-const OPENROUTER_API_KEY = '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';
+// OpenRouter configuration - API key from environment variable
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const MODEL = 'stepfun/step-3.5-flash:free';
 
 router.use(authenticate);
@@ -16,6 +16,14 @@ router.post('/', async (req, res) => {
 
         if (!message) {
             return res.status(400).json({ error: 'Message is required' });
+        }
+
+        // Check if API key is configured
+        if (!OPENROUTER_API_KEY) {
+            return res.json({
+                reply: "The AI assistant is not configured. Please set the OPENROUTER_API_KEY environment variable.",
+                error: true
+            });
         }
 
         // Build messages array with system prompt
@@ -32,7 +40,7 @@ router.post('/', async (req, res) => {
 
 Be helpful, concise, and professional. Provide actionable advice for business operations.`
             },
-            ...history.slice(-10), // Keep last 10 messages for context
+            ...history.slice(-10),
             { role: 'user', content: message }
         ];
 
